@@ -19,19 +19,19 @@ window.QUIZ_CONFIG = {
       id: "r1",
       title: "สายลุย",
       description: "ชอบผจญภัย ไม่กลัวความท้าทาย",
-      image: "https://placehold.co/600x400/6366f1/ffffff?text=Result+1"
+      image: "https://placehold.co/1080x1350/6366f1/ffffff?text=Result+1"
     },
     {
       id: "r2",
       title: "สายชิล",
       description: "รักความสงบ ใช้ชีวิตเรียบง่าย",
-      image: "https://placehold.co/600x400/8b5cf6/ffffff?text=Result+2"
+      image: "https://placehold.co/1080x1350/8b5cf6/ffffff?text=Result+2"
     },
     {
       id: "r3",
       title: "สายคิด",
       description: "ชอบวางแผน วิเคราะห์ก่อนลงมือ",
-      image: "https://placehold.co/600x400/ec4899/ffffff?text=Result+3"
+      image: "https://placehold.co/1080x1350/ec4899/ffffff?text=Result+3"
     }
   ],
 
