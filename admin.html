@@ -56,8 +56,10 @@
     <p class="sub">เพิ่ม/ลบผลลัพธ์ คำถาม และตัวเลือกได้อิสระ ผลลัพธ์แสดงเป็นรูปภาพ</p>
 
     <div class="hint">
-      💡 <b>วิธีที่ง่ายที่สุด:</b> ตั้งค่าให้เสร็จ แล้วกด <b>🔗 สร้างลิงก์สำหรับส่ง</b> ด้านล่าง → copy ส่งให้ผู้ใช้ จบเลย ไม่ต้อง deploy ใหม่
-      <br />🖼️ <b>รูปผลลัพธ์:</b> ต้องเป็น <b>ลิงก์รูป (URL)</b> — อัปโหลดรูปไว้ที่ imgur / Google Drive (แชร์แบบ public) / Discord แล้ววาง URL ลงในช่องรูป
+      💡 <b>วิธีเผยแพร่ (ลิงก์สั้น ส่ง Discord ได้):</b> ตั้งค่าให้เสร็จ → กด <b>⬇️ ดาวน์โหลด config.js</b> → เอาไฟล์ไปวางทับในโปรเจกต์ แล้ว
+      <code>git add -A &amp;&amp; git commit -m "update quiz" &amp;&amp; git push</code> → Vercel deploy เอง
+      <br />เสร็จแล้วส่ง <b>ลิงก์โดเมนหลักสั้น ๆ</b> เช่น <code>https://quiz-app.vercel.app/</code> ให้เพื่อนใน Discord ได้เลย
+      <br />🖼️ <b>รูปผลลัพธ์:</b> ต้องเป็น <b>ลิงก์รูป (URL)</b> — อัปโหลดไว้ที่ imgur / Google Drive (แชร์ public) / Discord แล้ววาง URL
     </div>
 
     <div class="section">
@@ -83,20 +85,32 @@
     </div>
 
     <div class="section">
-      <h2>🔗 ลิงก์สำหรับส่งให้ผู้ใช้</h2>
-      <div class="note">คำถาม ผลลัพธ์ และลิงก์รูปทั้งหมดฝังอยู่ในลิงก์นี้ — copy ส่งได้เลย</div>
-      <textarea id="share-link" readonly placeholder="กด “สร้างลิงก์สำหรับส่ง” แล้วลิงก์จะขึ้นตรงนี้" style="min-height:80px"></textarea>
-      <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
-        <button class="btn" onclick="makeLink()">🔗 สร้างลิงก์สำหรับส่ง</button>
-        <button class="btn ghost" onclick="copyLink()">📋 คัดลอกลิงก์</button>
-        <button class="btn ghost" onclick="openLink()">👁 ทดลองเปิดลิงก์</button>
+      <h2>🚀 เผยแพร่ (Publish)</h2>
+      <div class="note">
+        1) กด <b>ดาวน์โหลด config.js</b> → 2) วางไฟล์ทับในโปรเจกต์ → 3) <code>git add -A &amp;&amp; git commit -m "update" &amp;&amp; git push</code>
+        <br />เสร็จแล้วส่ง <b>ลิงก์โดเมนหลักสั้น ๆ</b> ให้เพื่อน (เช่น https://quiz-app.vercel.app/) — ใช้ใน Discord ได้ไม่ยาวเกิน
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn" onclick="download()">⬇️ ดาวน์โหลด config.js</button>
+        <button class="btn ghost" onclick="save(); openPreview()">👁 พรีวิวในเครื่อง</button>
       </div>
     </div>
 
+    <details class="section" style="padding:16px 22px">
+      <summary style="cursor:pointer;color:var(--muted);font-size:14px">🔗 (ทางเลือก) สร้างลิงก์แบบฝัง config — สำหรับทดสอบเท่านั้น ⚠️ ลิงก์ยาว ส่ง Discord ไม่ได้</summary>
+      <div class="note" style="margin-top:12px">ลิงก์นี้ฝังคำถามทั้งหมดไว้ในตัว จึงยาวมาก (มักเกิน 2000 ตัว) ใช้ดูตัวอย่างเร็ว ๆ ได้ แต่อย่าใช้ส่งจริง</div>
+      <textarea id="share-link" readonly placeholder="กด “สร้างลิงก์” แล้วลิงก์จะขึ้นตรงนี้" style="min-height:70px"></textarea>
+      <div id="link-len" class="note" style="margin:6px 0"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn ghost" onclick="makeLink()">🔗 สร้างลิงก์</button>
+        <button class="btn ghost" onclick="copyLink()">📋 คัดลอก</button>
+        <button class="btn ghost" onclick="openLink()">👁 เปิดลิงก์</button>
+      </div>
+    </details>
+
     <div class="toolbar">
-      <button class="btn" onclick="makeLink()">🔗 สร้างลิงก์สำหรับส่ง</button>
+      <button class="btn" onclick="download()">⬇️ ดาวน์โหลด config.js</button>
       <button class="btn ghost" onclick="save()">💾 บันทึกพรีวิว</button>
-      <button class="btn ghost" onclick="download()">⬇️ ดาวน์โหลด config.js</button>
       <button class="btn ghost" onclick="resetDefault()">↺ กลับค่าเริ่มต้น</button>
     </div>
   </div>
@@ -323,7 +337,16 @@
       if (!validate()) return;
       const link = buildShareUrl();
       document.getElementById('share-link').value = link;
-      toast('สร้างลิงก์แล้ว — กดคัดลอกแล้วส่งได้เลย ✓');
+      const len = link.length;
+      const info = document.getElementById('link-len');
+      if (len > 2000) {
+        info.textContent = `⚠️ ลิงก์ยาว ${len} ตัวอักษร (เกิน 2000) — Discord/เบราว์เซอร์บางที่รับไม่ได้ ใช้วิธีเผยแพร่ด้านบนแทน`;
+        info.style.color = '#fca5a5';
+      } else {
+        info.textContent = `ลิงก์ยาว ${len} ตัวอักษร`;
+        info.style.color = 'var(--muted)';
+      }
+      toast('สร้างลิงก์แล้ว (สำหรับทดสอบ)');
     }
 
     function copyLink() {
@@ -337,6 +360,12 @@
     function openLink() {
       if (!validate()) return;
       window.open(document.getElementById('share-link').value || buildShareUrl(), '_blank');
+    }
+
+    // เปิดหน้าแบบทดสอบด้วยค่าพรีวิวที่เพิ่งเซฟใน browser (ไม่ต้องผ่านลิงก์ยาว)
+    function openPreview() {
+      save();
+      window.open('index.html', '_blank');
     }
 
     function download() {
