@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>หน้าแอดมิน · ตั้งค่าแบบทดสอบ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f172a; --card: #1e293b; --accent: #6366f1; --accent-2: #8b5cf6;
+      --text: #e2e8f0; --muted: #94a3b8; --border: #334155; --green: #22c55e; --red: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Sarabun', sans-serif; background: #0f172a; color: var(--text); padding: 24px; line-height: 1.5; }
+    .wrap { max-width: 860px; margin: 0 auto; }
+    h1 { font-size: 26px; margin-bottom: 6px; }
+    .sub { color: var(--muted); margin-bottom: 24px; }
+    .section { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 22px; margin-bottom: 20px; }
+    .section h2 { font-size: 18px; margin-bottom: 6px; color: var(--accent-2); }
+    .section .note { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+    label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 4px; }
+    input, textarea, select {
+      width: 100%; background: #0f172a; border: 1px solid var(--border); color: var(--text);
+      border-radius: 10px; padding: 11px 13px; font-family: inherit; font-size: 15px;
+    }
+    input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 60px; }
+    .block { border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; background: #182234; }
+    .block-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .block-head .name { font-weight: 600; color: var(--accent); }
+    .opt-row { display: grid; grid-template-columns: 1fr 200px auto; gap: 10px; align-items: end; margin-bottom: 10px; }
+    .thumb { width: 100%; max-height: 130px; object-fit: cover; border-radius: 10px; margin-top: 8px; border: 1px solid var(--border); }
+    .btn { background: linear-gradient(90deg, var(--accent), var(--accent-2)); color: #fff; border: none;
+      border-radius: 12px; padding: 13px 20px; font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer; }
+    .btn:hover { opacity: .92; }
+    .btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn.sm { padding: 8px 14px; font-size: 13px; }
+    .btn.danger { background: transparent; border: 1px solid var(--red); color: #fca5a5; }
+    .btn.add { background: transparent; border: 1px dashed var(--accent); color: var(--accent); width: 100%; margin-top: 4px; }
+    .toolbar { display: flex; gap: 12px; flex-wrap: wrap; position: sticky; bottom: 0;
+      background: rgba(15,23,42,.96); padding: 16px 0; border-top: 1px solid var(--border); }
+    .toast { position: fixed; top: 20px; right: 20px; background: var(--green); color: #052e16;
+      padding: 14px 20px; border-radius: 12px; font-weight: 600; opacity: 0; transform: translateY(-10px);
+      transition: all .3s; pointer-events: none; z-index: 10; max-width: 320px; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .hint { font-size: 13px; color: var(--muted); background: #172033; border: 1px dashed var(--border);
+      border-radius: 10px; padding: 12px 14px; margin-bottom: 18px; }
+    .hint b { color: var(--text); }
+    @media (max-width: 640px) { .opt-row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>⚙️ หน้าแอดมิน — ตั้งค่าแบบทดสอบ</h1>
+    <p class="sub">เพิ่ม/ลบผลลัพธ์ คำถาม และตัวเลือกได้อิสระ ผลลัพธ์แสดงเป็นรูปภาพ</p>
+
+    <div class="hint">
+      💡 <b>วิธีที่ง่ายที่สุด:</b> ตั้งค่าให้เสร็จ แล้วกด <b>🔗 สร้างลิงก์สำหรับส่ง</b> ด้านล่าง → copy ส่งให้ผู้ใช้ จบเลย ไม่ต้อง deploy ใหม่
+      <br />🖼️ <b>รูปผลลัพธ์:</b> ต้องเป็น <b>ลิงก์รูป (URL)</b> — อัปโหลดรูปไว้ที่ imgur / Google Drive (แชร์แบบ public) / Discord แล้ววาง URL ลงในช่องรูป
+    </div>
+
+    <div class="section">
+      <h2>ข้อมูลทั่วไป</h2>
+      <label>ชื่อแบบทดสอบ</label>
+      <input id="title" />
+      <label>คำอธิบายหน้าแรก</label>
+      <textarea id="intro"></textarea>
+    </div>
+
+    <div class="section">
+      <h2>ผลลัพธ์</h2>
+      <div class="note">ผลลัพธ์แต่ละแบบมีชื่อ คำอธิบาย และรูป (URL) — เพิ่มกี่แบบก็ได้</div>
+      <div id="results"></div>
+      <button class="btn add" onclick="addResult()">+ เพิ่มผลลัพธ์</button>
+    </div>
+
+    <div class="section">
+      <h2>คำถาม</h2>
+      <div class="note">แต่ละข้อมีตัวเลือกกี่ตัวก็ได้ แต่ละตัวเลือกเลือกว่า “ให้คะแนนผลลัพธ์ไหน”</div>
+      <div id="questions"></div>
+      <button class="btn add" onclick="addQuestion()">+ เพิ่มคำถาม</button>
+    </div>
+
+    <div class="section">
+      <h2>🔗 ลิงก์สำหรับส่งให้ผู้ใช้</h2>
+      <div class="note">คำถาม ผลลัพธ์ และลิงก์รูปทั้งหมดฝังอยู่ในลิงก์นี้ — copy ส่งได้เลย</div>
+      <textarea id="share-link" readonly placeholder="กด “สร้างลิงก์สำหรับส่ง” แล้วลิงก์จะขึ้นตรงนี้" style="min-height:80px"></textarea>
+      <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn" onclick="makeLink()">🔗 สร้างลิงก์สำหรับส่ง</button>
+        <button class="btn ghost" onclick="copyLink()">📋 คัดลอกลิงก์</button>
+        <button class="btn ghost" onclick="openLink()">👁 ทดลองเปิดลิงก์</button>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn" onclick="makeLink()">🔗 สร้างลิงก์สำหรับส่ง</button>
+      <button class="btn ghost" onclick="save()">💾 บันทึกพรีวิว</button>
+      <button class="btn ghost" onclick="download()">⬇️ ดาวน์โหลด config.js</button>
+      <button class="btn ghost" onclick="resetDefault()">↺ กลับค่าเริ่มต้น</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="config.js"></script>
+  <script>
+    const LS_KEY = 'quizConfigOverride';
+    let seq = 0; // ตัวช่วยสร้าง id ผลลัพธ์ใหม่
+
+    function loadConfig() {
+      const saved = localStorage.getItem(LS_KEY);
+      if (saved) { try { return normalize(JSON.parse(saved)); } catch (e) {} }
+      return normalize(structuredClone(window.QUIZ_CONFIG));
+    }
+
+    // กันข้อมูลเก่า/ไม่ครบ ให้มีโครงที่ถูกต้องเสมอ
+    function normalize(c) {
+      c.title = c.title || '';
+      c.intro = c.intro || '';
+      c.results = Array.isArray(c.results) ? c.results : [];
+      c.questions = Array.isArray(c.questions) ? c.questions : [];
+      c.results.forEach(r => { if (!r.id) r.id = newId(); });
+      c.questions.forEach(q => { if (!Array.isArray(q.options)) q.options = []; });
+      return c;
+    }
+
+    function newId() { seq++; return 'r' + Date.now().toString(36) + seq; }
+
+    let cfg = loadConfig();
+
+    // ---------- render ----------
+    function render() {
+      document.getElementById('title').value = cfg.title;
+      document.getElementById('intro').value = cfg.intro;
+      renderResults();
+      renderQuestions();
+    }
+
+    function renderResults() {
+      const box = document.getElementById('results');
+      box.innerHTML = '';
+      cfg.results.forEach((r, i) => {
+        const el = document.createElement('div');
+        el.className = 'block';
+        el.innerHTML = `
+          <div class="block-head">
+            <span class="name">ผลลัพธ์ #${i + 1}</span>
+            <button class="btn danger sm" data-del-result="${i}">ลบ</button>
+          </div>
+          <label>ชื่อผลลัพธ์</label>
+          <input data-r="${i}" data-f="title" value="${esc(r.title)}" />
+          <label>คำอธิบาย</label>
+          <textarea data-r="${i}" data-f="description">${escText(r.description)}</textarea>
+          <label>ลิงก์รูป (URL)</label>
+          <input data-r="${i}" data-f="image" value="${esc(r.image)}" placeholder="https://..." />
+          ${r.image ? `<img class="thumb" src="${esc(r.image)}" onerror="this.style.display='none'" />` : ''}
+        `;
+        box.appendChild(el);
+      });
+    }
+
+    function renderQuestions() {
+      const box = document.getElementById('questions');
+      box.innerHTML = '';
+      cfg.questions.forEach((q, qi) => {
+        const el = document.createElement('div');
+        el.className = 'block';
+        const optsHtml = q.options.map((o, oi) => `
+          <div class="opt-row">
+            <div>
+              <label>ตัวเลือก ${oi + 1}</label>
+              <input data-q="${qi}" data-o="${oi}" data-f="text" value="${esc(o.text)}" />
+            </div>
+            <div>
+              <label>ให้คะแนนผลลัพธ์</label>
+              ${resultSelect(o.result, qi, oi)}
+            </div>
+            <button class="btn danger sm" data-del-opt="${qi}:${oi}">ลบ</button>
+          </div>`).join('');
+        el.innerHTML = `
+          <div class="block-head">
+            <span class="name">ข้อ ${qi + 1}</span>
+            <button class="btn danger sm" data-del-q="${qi}">ลบข้อนี้</button>
+          </div>
+          <label>คำถาม</label>
+          <input data-q="${qi}" data-f="q" value="${esc(q.q)}" />
+          <div style="margin-top:14px">${optsHtml}</div>
+          <button class="btn add sm" data-add-opt="${qi}">+ เพิ่มตัวเลือก</button>
+        `;
+        box.appendChild(el);
+      });
+    }
+
+    function resultSelect(selected, qi, oi) {
+      const opts = cfg.results.map(r =>
+        `<option value="${esc(r.id)}" ${r.id === selected ? 'selected' : ''}>${esc(r.title || '(ไม่มีชื่อ)')}</option>`
+      ).join('');
+      return `<select data-q="${qi}" data-o="${oi}" data-f="result">${opts}</select>`;
+    }
+
+    function esc(s) { return String(s == null ? '' : s).replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+    function escText(s) { return String(s == null ? '' : s).replace(/</g, '&lt;'); }
+
+    // ---------- อ่านค่าจากฟอร์มกลับเข้า cfg ----------
+    function collect() {
+      cfg.title = document.getElementById('title').value;
+      cfg.intro = document.getElementById('intro').value;
+
+      document.querySelectorAll('#results [data-r]').forEach(inp => {
+        cfg.results[+inp.dataset.r][inp.dataset.f] = inp.value;
+      });
+      document.querySelectorAll('#questions [data-q]').forEach(inp => {
+        const qi = +inp.dataset.q;
+        if (inp.dataset.o !== undefined) {
+          cfg.questions[qi].options[+inp.dataset.o][inp.dataset.f] = inp.value;
+        } else {
+          cfg.questions[qi][inp.dataset.f] = inp.value;
+        }
+      });
+    }
+
+    // ---------- add / remove ----------
+    function addResult() {
+      collect();
+      cfg.results.push({ id: newId(), title: 'ผลลัพธ์ใหม่', description: '', image: '' });
+      render();
+    }
+    function delResult(i) {
+      collect();
+      const removed = cfg.results[i].id;
+      cfg.results.splice(i, 1);
+      // ตัวเลือกที่ชี้ผลลัพธ์ที่ถูกลบ ให้ย้ายไปผลลัพธ์แรกที่เหลือ
+      const fallback = cfg.results[0] ? cfg.results[0].id : '';
+      cfg.questions.forEach(q => q.options.forEach(o => { if (o.result === removed) o.result = fallback; }));
+      render();
+    }
+    function addQuestion() {
+      collect();
+      const first = cfg.results[0] ? cfg.results[0].id : '';
+      cfg.questions.push({ q: 'คำถามใหม่', options: [
+        { text: 'ตัวเลือก 1', result: first },
+        { text: 'ตัวเลือก 2', result: cfg.results[1] ? cfg.results[1].id : first }
+      ]});
+      render();
+    }
+    function delQuestion(qi) { collect(); cfg.questions.splice(qi, 1); render(); }
+    function addOption(qi) {
+      collect();
+      const first = cfg.results[0] ? cfg.results[0].id : '';
+      cfg.questions[qi].options.push({ text: '', result: first });
+      render();
+    }
+    function delOption(qi, oi) { collect(); cfg.questions[qi].options.splice(oi, 1); render(); }
+
+    // event delegation สำหรับปุ่มลบ/เพิ่ม
+    document.body.addEventListener('click', e => {
+      const t = e.target;
+      if (t.dataset.delResult !== undefined) delResult(+t.dataset.delResult);
+      else if (t.dataset.delQ !== undefined) delQuestion(+t.dataset.delQ);
+      else if (t.dataset.addOpt !== undefined) addOption(+t.dataset.addOpt);
+      else if (t.dataset.delOpt !== undefined) {
+        const [qi, oi] = t.dataset.delOpt.split(':').map(Number);
+        delOption(qi, oi);
+      }
+    });
+
+    // ---------- save / link / download ----------
+    function validate() {
+      if (cfg.results.length === 0) { toast('ต้องมีผลลัพธ์อย่างน้อย 1 แบบ', true); return false; }
+      if (cfg.questions.length === 0) { toast('ต้องมีคำถามอย่างน้อย 1 ข้อ', true); return false; }
+      for (const q of cfg.questions) {
+        if (q.options.length === 0) { toast('ทุกข้อต้องมีตัวเลือกอย่างน้อย 1 ตัว', true); return false; }
+      }
+      return true;
+    }
+
+    function save() {
+      collect();
+      localStorage.setItem(LS_KEY, JSON.stringify(cfg));
+      toast('บันทึกพรีวิวแล้ว ✓');
+    }
+
+    function encodeConfig(obj) {
+      const bytes = new TextEncoder().encode(JSON.stringify(obj));
+      let bin = '';
+      bytes.forEach(b => bin += String.fromCharCode(b));
+      return btoa(bin);
+    }
+
+    function buildShareUrl() {
+      collect();
+      const encoded = encodeURIComponent(encodeConfig(cfg));
+      const base = location.href.replace(/admin\.html.*$/, '').replace(/admin(\/)?$/, '');
+      const url = new URL('index.html', base);
+      return url.href + '?c=' + encoded;
+    }
+
+    function makeLink() {
+      collect();
+      if (!validate()) return;
+      const link = buildShareUrl();
+      document.getElementById('share-link').value = link;
+      toast('สร้างลิงก์แล้ว — กดคัดลอกแล้วส่งได้เลย ✓');
+    }
+
+    function copyLink() {
+      const box = document.getElementById('share-link');
+      if (!box.value) { if (!validate()) return; box.value = buildShareUrl(); }
+      navigator.clipboard.writeText(box.value)
+        .then(() => toast('คัดลอกลิงก์แล้ว 📋'))
+        .catch(() => { box.select(); document.execCommand('copy'); toast('คัดลอกลิงก์แล้ว 📋'); });
+    }
+
+    function openLink() {
+      if (!validate()) return;
+      window.open(document.getElementById('share-link').value || buildShareUrl(), '_blank');
+    }
+
+    function download() {
+      collect();
+      if (!validate()) return;
+      const content =
+`// ============================================================
+//  ไฟล์ตั้งค่าแบบทดสอบ (Quiz Config) — สร้างจากหน้าแอดมิน
+// ============================================================
+
+window.QUIZ_CONFIG = ${JSON.stringify(cfg, null, 2)};
+`;
+      const blob = new Blob([content], { type: 'text/javascript' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'config.js';
+      a.click();
+      toast('ดาวน์โหลด config.js แล้ว');
+    }
+
+    function resetDefault() {
+      if (!confirm('กลับไปใช้ค่าเริ่มต้นจากไฟล์ config.js? การแก้ที่ยังไม่ได้เซฟ/ดาวน์โหลดจะหาย')) return;
+      localStorage.removeItem(LS_KEY);
+      cfg = normalize(structuredClone(window.QUIZ_CONFIG));
+      render();
+      toast('กลับค่าเริ่มต้นแล้ว');
+    }
+
+    let toastTimer;
+    function toast(msg, isError) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.background = isError ? '#ef4444' : '#22c55e';
+      t.style.color = isError ? '#450a0a' : '#052e16';
+      t.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+    }
+
+    render();
+  </script>
+</body>
+</html>

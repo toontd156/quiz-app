@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>แบบทดสอบ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f172a; --card: #1e293b; --accent: #6366f1; --accent-2: #8b5cf6;
+      --text: #e2e8f0; --muted: #94a3b8; --border: #334155;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: linear-gradient(160deg, #0f172a 0%, #1e1b4b 100%);
+      color: var(--text); min-height: 100vh; display: flex;
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .wrap { width: 100%; max-width: 640px; }
+    .card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 20px;
+      padding: 32px; box-shadow: 0 20px 50px rgba(0,0,0,.4);
+    }
+    h1 { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+    .intro { color: var(--muted); margin-bottom: 24px; line-height: 1.6; }
+    .progress-bar { height: 8px; background: var(--border); border-radius: 99px; overflow: hidden; margin-bottom: 24px; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); width: 0; transition: width .3s ease; }
+    .qnum { color: var(--accent-2); font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+    .question { font-size: 20px; font-weight: 600; margin-bottom: 24px; line-height: 1.5; }
+    .options { display: flex; flex-direction: column; gap: 12px; }
+    .opt {
+      background: #273449; border: 2px solid var(--border); color: var(--text);
+      border-radius: 14px; padding: 18px 20px; font-size: 16px; font-family: inherit;
+      text-align: left; cursor: pointer; transition: all .15s ease;
+    }
+    .opt:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .opt:active { transform: translateY(0); }
+    .btn {
+      background: linear-gradient(90deg, var(--accent), var(--accent-2)); color: #fff;
+      border: none; border-radius: 14px; padding: 16px; font-size: 16px; font-weight: 600;
+      font-family: inherit; cursor: pointer; width: 100%; margin-top: 8px;
+    }
+    .btn:hover { opacity: .92; }
+    .result-img { width: 100%; border-radius: 16px; margin-bottom: 20px; display: block; object-fit: cover; }
+    .result-title {
+      font-size: 30px; font-weight: 700; margin-bottom: 12px; text-align: center;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .result-desc { color: var(--text); line-height: 1.7; text-align: center; margin-bottom: 24px; white-space: pre-wrap; }
+    .score { text-align:center; color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div id="start-screen">
+        <h1 id="title"></h1>
+        <p class="intro" id="intro"></p>
+        <button class="btn" onclick="startQuiz()">เริ่มทำแบบทดสอบ</button>
+      </div>
+
+      <div id="quiz-screen" class="hidden">
+        <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+        <div class="qnum" id="qnum"></div>
+        <div class="question" id="question"></div>
+        <div class="options" id="options"></div>
+      </div>
+
+      <div id="result-screen" class="hidden">
+        <img class="result-img" id="result-img" alt="" />
+        <div class="result-title" id="result-title"></div>
+        <div class="result-desc" id="result-desc"></div>
+        <div class="score" id="score"></div>
+        <button class="btn" onclick="restart()">ทำอีกครั้ง</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script>
+    // ลำดับการเลือกค่า: (1) ?c= ในลิงก์  (2) พรีวิวใน browser  (3) config.js
+    let cfg = window.QUIZ_CONFIG;
+
+    function decodeConfig(str) {
+      const bin = atob(str);
+      const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+      return JSON.parse(new TextDecoder().decode(bytes));
+    }
+    try {
+      const param = new URLSearchParams(location.search).get('c');
+      if (param) cfg = decodeConfig(param);
+      else {
+        const preview = localStorage.getItem('quizConfigOverride');
+        if (preview) cfg = JSON.parse(preview);
+      }
+    } catch (e) { console.warn('ใช้ค่าเริ่มต้นจาก config.js', e); }
+
+    let current = 0;
+    let tally = {}; // นับคะแนนของแต่ละ result id
+
+    document.getElementById('title').textContent = cfg.title;
+    document.getElementById('intro').textContent = cfg.intro;
+
+    function startQuiz() {
+      current = 0;
+      tally = {};
+      cfg.results.forEach(r => tally[r.id] = 0);
+      show('quiz-screen');
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      const item = cfg.questions[current];
+      const total = cfg.questions.length;
+      document.getElementById('qnum').textContent = `ข้อ ${current + 1} / ${total}`;
+      document.getElementById('question').textContent = item.q;
+      document.getElementById('progress').style.width = `${(current / total) * 100}%`;
+
+      const box = document.getElementById('options');
+      box.innerHTML = '';
+      item.options.forEach(opt => {
+        const b = document.createElement('button');
+        b.className = 'opt';
+        b.textContent = opt.text;
+        b.onclick = () => answer(opt.result);
+        box.appendChild(b);
+      });
+    }
+
+    function answer(resultId) {
+      if (resultId in tally) tally[resultId]++;
+      current++;
+      if (current < cfg.questions.length) renderQuestion();
+      else showResult();
+    }
+
+    function showResult() {
+      // หา result ที่คะแนนสูงสุด (เสมอ = อันที่มาก่อนในลิสต์ results)
+      let winner = cfg.results[0];
+      let max = -1;
+      cfg.results.forEach(r => {
+        if (tally[r.id] > max) { max = tally[r.id]; winner = r; }
+      });
+
+      const img = document.getElementById('result-img');
+      if (winner.image) { img.src = winner.image; img.style.display = 'block'; img.alt = winner.title; }
+      else { img.style.display = 'none'; }
+
+      document.getElementById('result-title').textContent = winner.title;
+      document.getElementById('result-desc').textContent = winner.description || '';
+      document.getElementById('score').textContent =
+        cfg.results.map(r => `${r.title}: ${tally[r.id]}`).join(' · ');
+      show('result-screen');
+    }
+
+    function restart() { show('start-screen'); }
+
+    function show(id) {
+      ['start-screen', 'quiz-screen', 'result-screen'].forEach(s => {
+        document.getElementById(s).classList.toggle('hidden', s !== id);
+      });
+    }
+  </script>
+</body>
+</html>
